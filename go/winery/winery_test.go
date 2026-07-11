@@ -151,29 +151,29 @@ func TestSortPrice(t *testing.T) {
 func TestSearchWines(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name       string
-		searchTerm string
-		want       string
+		name  string
+		query string
+		want  string
 	}{
 		{
-			name:       "should return all wines",
-			searchTerm: "",
-			want:       "0,1,2,3,4,5",
+			name:  "should return all wines",
+			query: "",
+			want:  "0,1,2,3,4,5",
 		},
 		{
-			name:       "should return cru wines",
-			searchTerm: "cru",
-			want:       "1,4,5",
+			name:  "should return cru wines",
+			query: "cru",
+			want:  "1,4,5",
 		},
 		{
-			name:       "should return 88's wines",
-			searchTerm: "88",
-			want:       "0,3",
+			name:  "should return 88's wines",
+			query: "88",
+			want:  "0,3",
 		},
 		{
-			name:       "should return AUX wines",
-			searchTerm: "AUX",
-			want:       "0,2,3",
+			name:  "should return AUX wines",
+			query: "AUX",
+			want:  "0,2,3",
 		},
 	}
 
@@ -186,7 +186,7 @@ func TestSearchWines(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			res := cellar.Search(tt.searchTerm)
+			res := cellar.Search(tt.query)
 
 			assert.Equal(t, tt.want, res.dump())
 		})
