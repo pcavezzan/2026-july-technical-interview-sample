@@ -2,6 +2,7 @@ package winery
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"testing"
@@ -15,33 +16,74 @@ import (
 /******************************************************************************************/
 
 func TestWineCreation(t *testing.T) {
-	var w1 = Object{
-		"name":   "Château Angelus",
-		"region": "Bordeaux",
-		"year":   2017,
-		"color":  COLOR_RED,
-	}
-	_, err := NewWine(w1)
-	require.EqualError(t, err, "wine must have a given price")
+	t.Parallel()
 
-	var w2 = Object{
-		"name":   "Château Angelus",
-		"region": "Bordeaux",
-		"year":   2017,
-		"price":  -1928.,
+	type args struct {
+		wine Object
 	}
-	_, err = NewWine(w2)
-	require.EqualError(t, err, "wine price must be a positive floating value, got (price: -1928.00)")
 
-	var wOK = Object{
-		"name":   "Château Angelus",
-		"region": "Bordeaux",
-		"year":   2017,
-		"price":  1928.,
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+		want    Wine
+	}{
+		{
+			name: "wine must have a given price",
+			args: args{
+				wine: Object{
+					"name":   "Château Angelus",
+					"region": "Bordeaux",
+					"year":   2017,
+					"color":  COLOR_RED,
+				},
+			},
+			wantErr: errors.New("wine must have a given price"),
+		},
+		{
+			name: "wine price must be a positive floating value",
+			args: args{
+				wine: Object{
+					"name":   "Château Angelus",
+					"region": "Bordeaux",
+					"year":   2017,
+					"price":  -1928.,
+				},
+			},
+			wantErr: errors.New("wine price must be a positive floating value, got (price: -1928.00)"),
+		},
+		{
+			name: "wine properly created",
+			args: args{
+				wine: Object{
+					"name":   "Château Angelus",
+					"region": "Bordeaux",
+					"year":   2017,
+					"price":  1928.,
+				},
+			},
+			want: Wine{
+				Name:   "Château Angelus",
+				Region: "Bordeaux",
+				Year:   2017,
+				Price:  1928.,
+			},
+		},
 	}
-	w, err := NewWine(wOK)
-	require.NoError(t, err)
-	require.Equal(t, w.Year, 2017, "wine properly created")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := NewWine(tt.args.wine)
+			if tt.wantErr != nil {
+				assert.EqualError(t, err, tt.wantErr.Error(), tt.wantErr.Error())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, &tt.want, got)
+			}
+		})
+	}
 }
 
 func TestClassifyByColor(t *testing.T) {
