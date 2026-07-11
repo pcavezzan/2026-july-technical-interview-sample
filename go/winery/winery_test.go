@@ -146,3 +146,78 @@ func openWineCatalog(t *testing.T) Cellar {
 	}
 	return cellar
 }
+
+/***********************************************************************************************/
+/****************************** BENCHMARKS TESTS FUNCTIONS *************************************/
+/***********************************************************************************************/
+
+func sampleCellar(n int) Cellar {
+	colors := []string{COLOR_RED, COLOR_WHITE, COLOR_ROSE}
+	c := make(Cellar, 0, n)
+	for i := 0; i < n; i++ {
+		c = append(c, Wine{
+			Id:     int64(i),
+			Name:   "Château Something Long Enough To Matter",
+			Price:  float64(i) * 12.5,
+			Year:   1990 + i%30,
+			Color:  colors[i%len(colors)],
+			Region: "Bordeaux",
+		})
+	}
+	return c
+}
+
+// A - idiomatic range, value bound to a name
+func classifyIdiomatic(c Cellar) map[string]Cellar {
+	res := make(map[string]Cellar)
+	for _, wine := range c {
+		res[wine.Color] = append(res[wine.Color], wine)
+	}
+	return res
+}
+
+// B - what was written live during the interview
+func classifyIndexThenCopy(c Cellar) map[string]Cellar {
+	res := make(map[string]Cellar)
+	for i, _ := range c {
+		wine := c[i]
+		res[wine.Color] = append(res[wine.Color], wine)
+	}
+	return res
+}
+
+// C - index only, never bind the value to a local name
+func classifyIndexOnly(c Cellar) map[string]Cellar {
+	res := make(map[string]Cellar)
+	for i := range c {
+		res[c[i].Color] = append(res[c[i].Color], c[i])
+	}
+	return res
+}
+
+func BenchmarkClassifyIdiomatic(b *testing.B) {
+	c := sampleCellar(1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = classifyIdiomatic(c)
+	}
+}
+
+func BenchmarkClassifyIndexThenCopy(b *testing.B) {
+	c := sampleCellar(1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = classifyIndexThenCopy(c)
+	}
+}
+
+func BenchmarkClassifyIndexOnly(b *testing.B) {
+	c := sampleCellar(1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = classifyIndexOnly(c)
+	}
+}
