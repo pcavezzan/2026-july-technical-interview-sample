@@ -107,8 +107,13 @@ func (c Cellar) SortByPrice(desc bool) Cellar {
 // Note that the search implementation must be case insensitive
 func (c Cellar) Search(str string) Cellar {
 	var res Cellar
-
-	// TODO: Candidate Codes
-
+	searchTerm := strings.ToLower(str)
+	for _, wine := range c {
+		if strings.Contains(strings.ToLower(wine.Name), searchTerm) ||
+			strings.Contains(strings.ToLower(wine.Region), searchTerm) ||
+			strings.Contains(strings.ToLower(strconv.Itoa(wine.Year)), searchTerm) {
+			res = append(res, wine)
+		}
+	}
 	return res
 }

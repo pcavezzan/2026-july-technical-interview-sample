@@ -149,23 +149,48 @@ func TestSortPrice(t *testing.T) {
 }
 
 func TestSearchWines(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name       string
+		searchTerm string
+		want       string
+	}{
+		{
+			name:       "should return all wines",
+			searchTerm: "",
+			want:       "0,1,2,3,4,5",
+		},
+		{
+			name:       "should return cru wines",
+			searchTerm: "cru",
+			want:       "1,4,5",
+		},
+		{
+			name:       "should return 88's wines",
+			searchTerm: "88",
+			want:       "0,3",
+		},
+		{
+			name:       "should return AUX wines",
+			searchTerm: "AUX",
+			want:       "0,2,3",
+		},
+	}
+
+	// We intentionnaly share cella because search should not modify the cellar.
+	// So we can reuse it for all tests without having any effect on any tests.
 	cellar := openWineCatalog(t)
-	assert.Equal(t, 6, cellar.Length())
+	require.Equal(t, 6, cellar.Length())
 
-	res1 := cellar.Search("")
-	assert.Equal(t, "0,1,2,3,4,5", res1.dump())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	res2 := cellar.Search("cru")
-	assert.Equal(t, "1,4,5", res2.dump())
+			res := cellar.Search(tt.searchTerm)
 
-	res3 := cellar.Search("bord")
-	assert.Equal(t, "0,2,3", res3.dump())
-
-	res4 := cellar.Search("88")
-	assert.Equal(t, "0,3", res4.dump())
-
-	res5 := cellar.Search("AUX")
-	assert.Equal(t, "0,2,3", res5.dump())
+			assert.Equal(t, tt.want, res.dump())
+		})
+	}
 }
 
 /******************************************************************************************/
