@@ -54,23 +54,28 @@ func (c Cellar) dump() string {
 // NewWine handles all error handling when creating a wine
 func NewWine(w Object) (*Wine, error) {
 	color := w["color"]
+	data, err := json.Marshal(w)
+	if err != nil {
+		return nil, err
+	}
+	var newWine Wine
+	err = json.Unmarshal(data, &newWine)
+	if err != nil {
+		return nil, err
+	}
+
+	if newWine.Price == 0.0 {
+		return nil, noPriceErr
+	}
+
+	if newWine.Price < 0.0 {
+		return nil, fmt.Errorf("wine price must be a positive floating value, got (price: %0.02f)", newWine.Price)
+	}
+
 	switch color {
 	case COLOR_RED, COLOR_WHITE, COLOR_ROSE:
-		data, err := json.Marshal(w)
-		if err != nil {
-			return nil, err
-		}
-		var w Wine
-		err = json.Unmarshal(data, &w)
-		if err != nil {
-			return nil, err
-		}
 
-		if w.Price == 0.0 {
-			return nil, noPriceErr
-		}
-
-		return &w, err
+		return &newWine, err
 
 	default:
 		return nil, fmt.Errorf("wine color '%v' is not an allowed value", color)
