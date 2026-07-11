@@ -76,9 +76,11 @@ func NewWine(w Object) (*Wine, error) {
 
 // ClassifyByColor Classifies all wines in a wine dictionary by color
 func (c Cellar) ClassifyByColor() map[string]Cellar {
-	var res map[string]Cellar
+	res := make(map[string]Cellar)
 
-	// TODO: Candidate Codes
+	for _, wine := range c {
+		res[wine.Color] = append(res[wine.Color], wine)
+	}
 
 	return res
 }
