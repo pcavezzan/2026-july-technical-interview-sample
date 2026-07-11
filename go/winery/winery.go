@@ -1,9 +1,11 @@
 package winery
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -83,10 +85,18 @@ func (c Cellar) ClassifyByColor() map[string]Cellar {
 
 // SortByPrice sorts all wines by their price
 func (c Cellar) SortByPrice(desc bool) Cellar {
-	var res Cellar
-
-	// TODO: Candidate Codes
-
+	res := slices.Clone(c)
+	var sort func(a, b Wine) int
+	if desc {
+		sort = func(a, b Wine) int {
+			return cmp.Compare(b.Price, a.Price)
+		}
+	} else {
+		sort = func(a, b Wine) int {
+			return cmp.Compare(a.Price, b.Price)
+		}
+	}
+	slices.SortStableFunc(res, sort)
 	return res
 }
 

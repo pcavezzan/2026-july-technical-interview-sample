@@ -121,16 +121,31 @@ func TestClassifyByColor(t *testing.T) {
 }
 
 func TestSortPrice(t *testing.T) {
-	cellar := openWineCatalog(t)
-	assert.Equal(t, 6, cellar.Length())
+	t.Parallel()
 
-	sortAsc := cellar.SortByPrice(false)
-	assert.Equal(t, "5,3,1,2,0,4", sortAsc.dump())
-	assert.Equal(t, "0,1,2,3,4,5", cellar.dump())
+	tests := []struct {
+		name string
+		desc bool
+		want string
+	}{
+		{name: "ascending", desc: false, want: "5,3,1,2,0,4"},
+		{name: "descending", desc: true, want: "4,0,1,2,3,5"},
+	}
 
-	sortDesc := cellar.SortByPrice(true)
-	assert.Equal(t, "4,0,1,2,3,5", sortDesc.dump())
-	assert.Equal(t, "0,1,2,3,4,5", cellar.dump())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			cellar := openWineCatalog(t)
+			require.Equal(t, 6, cellar.Length())
+
+			got := cellar.SortByPrice(tt.desc)
+
+			assert.Equal(t, tt.want, got.dump())
+			// l'invariant clé, vérifié pour chaque cas
+			assert.Equal(t, "0,1,2,3,4,5", cellar.dump(), "original should stay the same")
+		})
+	}
 }
 
 func TestSearchWines(t *testing.T) {
