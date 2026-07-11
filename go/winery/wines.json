@@ -1,0 +1,48 @@
+{
+  "wines": [
+    {
+      "id": 0,
+      "name": "Chateau Petrus",
+      "year": 1988,
+      "price": 4900,
+      "region": "Bordeaux"
+    },
+    {
+      "id": 1,
+      "name": "Grand Cru Montrachet - Louis Jadot",
+      "year": 2018,
+      "price": 2350,
+      "region": "Burgundy",
+      "color": "white"
+    },
+    {
+      "id": 2,
+      "name": "Chateau Margaux",
+      "year": 2000,
+      "price": 2350,
+      "region": "Bordeaux"
+    },
+    {
+      "id": 3,
+      "name": "Chateau Cheval Blanc",
+      "year": 1988,
+      "price": 1350,
+      "region": "Bordeaux"
+    },
+    {
+      "id": 4,
+      "name": "La tâche grand cru - Domaine La Romanée Contie",
+      "year": 2013,
+      "price": 6350,
+      "region": "Burgundy"
+    },
+    {
+      "id": 5,
+      "name": "Fourchaume - Chablis 1er Cru",
+      "year": 2018,
+      "price": 40,
+      "region": "Burgundy",
+      "color": "white"
+    }
+  ]
+}
