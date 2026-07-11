@@ -24,7 +24,7 @@ type Wine struct {
 	Name   string  `json:"name"`
 	Price  float64 `json:"price"`
 	Year   int     `json:"year"`
-	Color  string  `json:"color"`
+	Color  string  `json:"color,omitempty"`
 	Region string  `json:"region"`
 }
 
@@ -63,15 +63,50 @@ func NewWine(w Object) (*Wine, error) {
 		return nil, err
 	}
 
+	return &newWine, validate(&newWine)
+}
+
+func validate(newWine *Wine) error {
 	if newWine.Price == 0.0 {
-		return nil, noPriceErr
+		return noPriceErr
 	}
 
 	if newWine.Price < 0.0 {
-		return nil, fmt.Errorf("wine price must be a positive floating value, got (price: %0.02f)", newWine.Price)
+		return fmt.Errorf("wine price must be a positive floating value, got (price: %0.02f)", newWine.Price)
+	}
+	return nil
+}
+
+// FromObject creates a Wine instance from the provided Object map by extracting and converting its fields.
+func FromObject(o Object) (*Wine, error) {
+	var price float64
+	if priceValue, ok := o["price"]; ok {
+		price = parseFloat64(priceValue)
+	}
+	var color string
+	if colorValue, ok := o["color"]; ok {
+		color = colorValue.(string)
 	}
 
-	return &newWine, nil
+	w := &Wine{
+		Name:   o["name"].(string),
+		Region: o["region"].(string),
+		Year:   o["year"].(int),
+		Price:  price,
+		Color:  color,
+	}
+	return w, validate(w)
+}
+
+func parseFloat64(priceValue any) float64 {
+	var price float64
+	switch priceValue.(type) {
+	case float64:
+		price = priceValue.(float64)
+	case int:
+		price = float64(priceValue.(int))
+	}
+	return price
 }
 
 // ClassifyByColor Classifies all wines in a wine dictionary by color
