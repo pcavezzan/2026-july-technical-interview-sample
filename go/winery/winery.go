@@ -2,10 +2,13 @@ package winery
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 )
+
+var noPriceErr = errors.New("wine must have a given price")
 
 const (
 	COLOR_RED   = ""
@@ -58,7 +61,16 @@ func NewWine(w Object) (*Wine, error) {
 			return nil, err
 		}
 		var w Wine
-		return &w, json.Unmarshal(data, &w)
+		err = json.Unmarshal(data, &w)
+		if err != nil {
+			return nil, err
+		}
+
+		if w.Price == 0.0 {
+			return nil, noPriceErr
+		}
+
+		return &w, err
 
 	default:
 		return nil, fmt.Errorf("wine color '%v' is not an allowed value", color)
