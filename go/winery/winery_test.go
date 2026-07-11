@@ -126,6 +126,15 @@ func TestFromObject(t *testing.T) {
 	assert.Equal(t, w.Region, "Bordeaux", "wine region not properly set")
 }
 
+func TestFromJsonBytes(t *testing.T) {
+	w, err := FromJsonBytes([]byte(`{"name":"Château Angelus","region":"Bordeaux","year":2017,"price":1928}`))
+	require.NoError(t, err)
+	assert.Equal(t, w.Year, 2017, "wine year not properly set")
+	assert.Equal(t, w.Name, "Château Angelus", "wine name not properly set")
+	assert.Equal(t, w.Price, 1928., "wine price not properly set")
+	assert.Equal(t, w.Region, "Bordeaux", "wine region not properly set")
+}
+
 /******************************************************************************************/
 /****************************** BENCHMARK TESTS *******************************************/
 /******************************************************************************************/
@@ -160,6 +169,18 @@ func BenchmarkFromObject(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_, _ = FromObject(object)
+	}
+}
+
+func BenchmarkFromJsonBytes(b *testing.B) {
+	jsonBytes := []byte(`{"name":"Château Angelus","region":"Bordeaux","year":2017,"price":1928}`)
+	wine, err := FromJsonBytes(jsonBytes)
+	require.NoError(b, err)
+	require.Equal(b, "Bordeaux", wine.Region)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _ = FromJsonBytes(jsonBytes)
 	}
 }
 

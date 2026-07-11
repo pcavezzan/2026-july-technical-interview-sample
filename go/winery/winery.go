@@ -98,6 +98,15 @@ func FromObject(o Object) (*Wine, error) {
 	return w, validate(w)
 }
 
+// FromJsonBytes creates a Wine instance from the provided JSON bytes by unmarshalling them into an Object map and then calling FromObject.
+func FromJsonBytes(jsonStr []byte) (*Wine, error) {
+	w := new(Wine)
+	if err := json.Unmarshal(jsonStr, w); err != nil {
+		return nil, err
+	}
+	return w, validate(w)
+}
+
 func parseFloat64(priceValue any) float64 {
 	var price float64
 	switch priceValue.(type) {
