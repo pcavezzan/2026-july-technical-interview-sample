@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /******************************************************************************************/
@@ -21,7 +22,7 @@ func TestWineCreation(t *testing.T) {
 		"color":  COLOR_RED,
 	}
 	_, err := NewWine(w1)
-	assert.EqualError(t, err, "wine must have a given price")
+	require.EqualError(t, err, "wine must have a given price")
 
 	var w2 = Object{
 		"name":   "Château Angelus",
@@ -30,7 +31,7 @@ func TestWineCreation(t *testing.T) {
 		"price":  -1928.,
 	}
 	_, err = NewWine(w2)
-	assert.EqualError(t, err, "wine price must be a positive floating value, got (price: -1928.00)")
+	require.EqualError(t, err, "wine price must be a positive floating value, got (price: -1928.00)")
 
 	var wOK = Object{
 		"name":   "Château Angelus",
@@ -39,8 +40,8 @@ func TestWineCreation(t *testing.T) {
 		"price":  1928.,
 	}
 	w, err := NewWine(wOK)
-	assert.NoError(t, err)
-	assert.Equal(t, w.Year, 2017, "wine properly created")
+	require.NoError(t, err)
+	require.Equal(t, w.Year, 2017, "wine properly created")
 }
 
 func TestClassifyByColor(t *testing.T) {
