@@ -1,8 +1,11 @@
 module winery
 
-go 1.25
+go 1.25.0
 
-require github.com/stretchr/testify v1.8.4
+require (
+	github.com/stretchr/testify v1.8.4
+	golang.org/x/text v0.40.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

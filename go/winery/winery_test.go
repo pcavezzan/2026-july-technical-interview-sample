@@ -175,6 +175,11 @@ func TestSearchWines(t *testing.T) {
 			query: "AUX",
 			want:  "0,2,3",
 		},
+		{
+			name:  "should return romanee result",
+			query: "romanee",
+			want:  "4",
+		},
 	}
 
 	// We intentionnaly share cella because search should not modify the cellar.

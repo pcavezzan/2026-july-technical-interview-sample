@@ -8,6 +8,11 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -107,13 +112,24 @@ func (c Cellar) SortByPrice(desc bool) Cellar {
 // Note that the search implementation must be case insensitive
 func (c Cellar) Search(str string) Cellar {
 	var res Cellar
-	searchTerm := strings.ToLower(str)
+	searchTerm := fold(str)
 	for _, wine := range c {
-		if strings.Contains(strings.ToLower(wine.Name), searchTerm) ||
-			strings.Contains(strings.ToLower(wine.Region), searchTerm) ||
-			strings.Contains(strings.ToLower(strconv.Itoa(wine.Year)), searchTerm) {
+		if strings.Contains(fold(wine.Name), searchTerm) ||
+			strings.Contains(fold(wine.Region), searchTerm) ||
+			strings.Contains(fold(strconv.Itoa(wine.Year)), searchTerm) {
 			res = append(res, wine)
 		}
 	}
 	return res
+}
+
+// fold abaisse la casse ET retire les accents : "La tâche" -> "la tache"
+func fold(s string) string {
+	t := transform.Chain(
+		norm.NFD,                           // é -> e + ´
+		runes.Remove(runes.In(unicode.Mn)), // supprime les marques (Mn)
+		norm.NFC,                           // recompose
+	)
+	out, _, _ := transform.String(t, s)
+	return strings.ToLower(out)
 }
