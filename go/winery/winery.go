@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -87,10 +89,16 @@ func (c Cellar) ClassifyByColor() map[string]Cellar {
 
 // SortByPrice sorts all wines by their price
 func (c Cellar) SortByPrice(desc bool) Cellar {
-	var res Cellar
-
-	// TODO: Candidate Codes
-
+	res := slices.Clone(c)
+	if desc {
+		sort.Slice(res, func(i, j int) bool {
+			return res[i].Price > res[j].Price
+		})
+	} else {
+		sort.Slice(res, func(i, j int) bool {
+			return res[i].Price < res[j].Price
+		})
+	}
 	return res
 }
 
