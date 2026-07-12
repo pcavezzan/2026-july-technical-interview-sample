@@ -36,51 +36,50 @@ func TestCheckProgress(t *testing.T) {
 	countTo := 100
 
 	progress := make(chan JobProgress)
-	wg := sync.WaitGroup{}
-
+	wgReader := sync.WaitGroup{}
+	wgReader.Add(1)
 	readerTestSuccess := false
-	trackerWaitGroup := sync.WaitGroup{}
-	trackerWaitGroup.Go(
-		func() {
-			result := JobTracker{}
-			for p := range progress {
-				result.RegisterProgression(p.JobId(), p.Progression())
-			}
+	go func() {
+		result := JobTracker{}
+		for p := range progress {
+			result.RegisterProgression(p.JobId(), p.Progression())
+		}
 
-			if len(result) != countTo {
-				t.Errorf("Some workers results are missing expected %d - got %d", countTo, len(result))
+		if len(result) != countTo {
+			t.Errorf("Some workers results are missing expected %d - got %d", countTo, len(result))
+			return
+		}
+
+		for value := 1; value <= countTo; value++ {
+			finishedJobs := result[value]
+			if finishedCount := len(finishedJobs); finishedCount != worker {
+				t.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
 				return
 			}
-
-			for value := 1; value <= countTo; value++ {
-				finishedJobs := result[value]
-				if finishedCount := len(finishedJobs); finishedCount != worker {
-					t.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
-					return
-				}
-			}
-			readerTestSuccess = true
-		})
+		}
+		readerTestSuccess = true
+		wgReader.Done()
+	}()
 
 	// Creates <worker> go routines to count steps up to <countTo> each
+	wgWorker := sync.WaitGroup{}
 	i := 0
 	for i < worker {
-		wg.Add(1)
+		wgWorker.Add(1)
 		i++
 		go func(i int) {
 			c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
 			for i := 0; i < countTo; i++ {
 				c.Inc()
 			}
-			wg.Done()
+			wgWorker.Done()
 		}(i)
 	}
 
 	// Waits for the end of all workers go routine
-	wg.Wait()
+	wgWorker.Wait()
 	close(progress)
-
-	trackerWaitGroup.Wait()
+	wgReader.Wait()
 	if !readerTestSuccess {
 		t.Errorf("Reader tests not performed")
 	}
