@@ -21,7 +21,7 @@ func (jt JobTracker) RegisterProgression(jobId string, progress int) {
 		track = jt[progress]
 	}
 	track[jobId] = struct{}{}
-	fmt.Println("RegisterProgression", jobId, progress)
+	fmt.Println("Job", jobId, "reached progress", progress)
 }
 
 // Check progress

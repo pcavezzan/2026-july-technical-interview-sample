@@ -1,7 +1,5 @@
 package concurrency
 
-import "sync"
-
 type JobProgress interface {
 	JobId() string
 	Progression() int
@@ -9,7 +7,6 @@ type JobProgress interface {
 
 // Counter to keep track of progression in a go routine
 type Counter struct {
-	lck             sync.RWMutex       // RWMutex to protect value from concurrent access
 	identifier      string             // Identifier of the Job being processed
 	value           int                // Current progression
 	progressChannel chan<- JobProgress // Channel where each progression step is published
@@ -17,8 +14,6 @@ type Counter struct {
 
 // Increment progression and publish it to consumer
 func (c *Counter) Inc() {
-	c.lck.Lock()
-	defer c.lck.Unlock()
 	c.value++
 	c.progressChannel <- *c
 }
