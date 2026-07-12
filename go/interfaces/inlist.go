@@ -8,8 +8,8 @@ type InList struct {
 }
 
 // Implements the Input interface
-func (in *InList) NextValue(cycle int) int {
-	return in.l.Get(cycle)
+func (in *InList) NextValue(cycle int) (int, error) {
+	return in.l.Get(cycle), nil
 }
 
 func NewInList(values ...int) InList {

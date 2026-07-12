@@ -8,12 +8,12 @@ type OutList struct {
 }
 
 // Implements the Output interface
-func (out OutList) SendValue(value int) error {
+func (out *OutList) SendValue(value int) error {
 	out.l.Append(value)
 	return nil
 }
 
 // Get the values that were stored in out
-func (out OutList) Result() []int {
+func (out *OutList) Result() []int {
 	return out.l.Slice()
 }
