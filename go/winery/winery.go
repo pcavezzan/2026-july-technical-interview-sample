@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"golang.org/x/text/cases"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -123,6 +124,8 @@ func (c Cellar) Search(str string) Cellar {
 	return res
 }
 
+var folder = cases.Fold()
+
 // fold abaisse la casse ET retire les accents : "La tâche" -> "la tache"
 func fold(s string) string {
 	t := transform.Chain(
@@ -131,5 +134,5 @@ func fold(s string) string {
 		norm.NFC,                           // recompose
 	)
 	out, _, _ := transform.String(t, s)
-	return strings.ToLower(out)
+	return folder.String(out)
 }
