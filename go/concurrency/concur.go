@@ -20,17 +20,15 @@ func (c *Counter) Inc() {
 	c.lck.Lock()
 	defer c.lck.Unlock()
 	c.value++
-	c.progressChannel <- c
+	c.progressChannel <- *c
 }
 
 // Current progression of the job
-func (c *Counter) Progression() int {
-	c.lck.RLock()
-	defer c.lck.RUnlock()
+func (c Counter) Progression() int {
 	return c.value
 }
 
-func (c *Counter) JobId() string {
+func (c Counter) JobId() string {
 	return c.identifier
 }
 

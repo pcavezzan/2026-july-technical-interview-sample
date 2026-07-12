@@ -21,6 +21,7 @@ func (jt JobTracker) RegisterProgression(jobId string, progress int) {
 		track = jt[progress]
 	}
 	track[jobId] = struct{}{}
+	fmt.Println("RegisterProgression", jobId, progress)
 }
 
 // Check progress
@@ -35,8 +36,8 @@ func TestCheckProgress(t *testing.T) {
 	countTo := 100
 
 	progress := make(chan JobProgress)
-	wg := sync.WaitGroup{}
-	wg.Add(worker)
+	readerWg := sync.WaitGroup{}
+	readerWg.Add(1)
 
 	readerTestSuccess := false
 	// Creates a go routine inspecting progression to check all workers fetch the end
@@ -59,25 +60,28 @@ func TestCheckProgress(t *testing.T) {
 			}
 		}
 		readerTestSuccess = true
+		readerWg.Done()
 	}()
 
 	// Creates <worker> go routines to count steps up to <countTo> each
 	i := 0
+	workerWg := sync.WaitGroup{}
 	for i < worker {
-		i++
-		go func() {
+		workerWg.Add(1)
+		go func(i int) {
 			c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
 			for i := 0; i < countTo; i++ {
 				c.Inc()
 			}
-			wg.Done()
-		}()
+			workerWg.Done()
+		}(i)
+		i++
 	}
 
 	// Waits for the end of all workers go routine
-	wg.Wait()
+	workerWg.Wait()
 	close(progress)
-
+	readerWg.Wait()
 	if !readerTestSuccess {
 		t.Errorf("Reader tests not performed")
 	}
