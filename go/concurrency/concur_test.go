@@ -37,9 +37,8 @@ func TestCheckProgress(t *testing.T) {
 
 	progress := make(chan JobProgress)
 	wgReader := sync.WaitGroup{}
-	wgReader.Add(1)
 	readerTestSuccess := false
-	go func() {
+	wgReader.Go(func() {
 		result := JobTracker{}
 		for p := range progress {
 			result.RegisterProgression(p.JobId(), p.Progression())
@@ -58,22 +57,19 @@ func TestCheckProgress(t *testing.T) {
 			}
 		}
 		readerTestSuccess = true
-		wgReader.Done()
-	}()
+	})
 
 	// Creates <worker> go routines to count steps up to <countTo> each
 	wgWorker := sync.WaitGroup{}
 	i := 0
 	for i < worker {
-		wgWorker.Add(1)
-		i++
-		go func(i int) {
-			c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
+		c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
+		wgWorker.Go(func() {
 			for i := 0; i < countTo; i++ {
 				c.Inc()
 			}
-			wgWorker.Done()
-		}(i)
+		})
+		i++
 	}
 
 	// Waits for the end of all workers go routine
