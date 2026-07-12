@@ -7,6 +7,19 @@ type JobProgress interface {
 	Progression() int
 }
 
+type Progression struct {
+	identifier string
+	value      int
+}
+
+func (p Progression) JobId() string {
+	return p.identifier
+}
+
+func (p Progression) Progression() int {
+	return p.value
+}
+
 // Counter to keep track of progression in a go routine
 type Counter struct {
 	lck             sync.RWMutex       // RWMutex to protect value from concurrent access
@@ -20,7 +33,10 @@ func (c *Counter) Inc() {
 	c.lck.Lock()
 	defer c.lck.Unlock()
 	c.value++
-	c.progressChannel <- c
+	c.progressChannel <- Progression{
+		identifier: c.identifier,
+		value:      c.value,
+	}
 }
 
 // Current progression of the job

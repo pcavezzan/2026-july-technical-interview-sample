@@ -21,6 +21,7 @@ func (jt JobTracker) RegisterProgression(jobId string, progress int) {
 		track = jt[progress]
 	}
 	track[jobId] = struct{}{}
+	fmt.Println("Job", jobId, "reached progress", progress)
 }
 
 // Check progress
@@ -36,48 +37,50 @@ func TestCheckProgress(t *testing.T) {
 
 	progress := make(chan JobProgress)
 	wg := sync.WaitGroup{}
-	wg.Add(worker)
 
 	readerTestSuccess := false
-	// Creates a go routine inspecting progression to check all workers fetch the end
-	go func() {
-		result := JobTracker{}
-		for p := range progress {
-			result.RegisterProgression(p.JobId(), p.Progression())
-		}
+	trackerWaitGroup := sync.WaitGroup{}
+	trackerWaitGroup.Go(
+		func() {
+			result := JobTracker{}
+			for p := range progress {
+				result.RegisterProgression(p.JobId(), p.Progression())
+			}
 
-		if len(result) != countTo {
-			t.Errorf("Some workers results are missing expected %d - got %d", countTo, len(result))
-			return
-		}
-
-		for value := 1; value <= countTo; value++ {
-			finishedJobs := result[value]
-			if finishedCount := len(finishedJobs); finishedCount != worker {
-				t.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
+			if len(result) != countTo {
+				t.Errorf("Some workers results are missing expected %d - got %d", countTo, len(result))
 				return
 			}
-		}
-		readerTestSuccess = true
-	}()
+
+			for value := 1; value <= countTo; value++ {
+				finishedJobs := result[value]
+				if finishedCount := len(finishedJobs); finishedCount != worker {
+					t.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
+					return
+				}
+			}
+			readerTestSuccess = true
+		})
 
 	// Creates <worker> go routines to count steps up to <countTo> each
 	i := 0
 	for i < worker {
+		wg.Add(1)
 		i++
-		go func() {
+		go func(i int) {
 			c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
 			for i := 0; i < countTo; i++ {
 				c.Inc()
 			}
 			wg.Done()
-		}()
+		}(i)
 	}
 
 	// Waits for the end of all workers go routine
 	wg.Wait()
 	close(progress)
 
+	trackerWaitGroup.Wait()
 	if !readerTestSuccess {
 		t.Errorf("Reader tests not performed")
 	}
