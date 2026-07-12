@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 const JOBID_FORMAT = "Worker %d"
@@ -29,56 +31,59 @@ func (jt JobTracker) RegisterProgression(jobId string, progress int) {
 //   - Each step of the progression is generated
 //   - All workers get to the end
 func TestCheckProgress(t *testing.T) {
+	t.Parallel()
 
-	// Constant to ease tests
-	worker := 5
-	countTo := 100
-
-	progress := make(chan JobProgress)
-	wg := sync.WaitGroup{}
-	wg.Add(worker)
-
-	readerTestSuccess := false
-	// Creates a go routine inspecting progression to check all workers fetch the end
-	go func() {
-		result := JobTracker{}
-		for p := range progress {
-			result.RegisterProgression(p.JobId(), p.Progression())
-		}
-
-		if len(result) != countTo {
-			t.Errorf("Some workers results are missing expected %d - got %d", countTo, len(result))
-			return
-		}
-
-		for value := 1; value <= countTo; value++ {
-			finishedJobs := result[value]
-			if finishedCount := len(finishedJobs); finishedCount != worker {
-				t.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
-				return
-			}
-		}
-		readerTestSuccess = true
-	}()
-
-	// Creates <worker> go routines to count steps up to <countTo> each
-	i := 0
-	for i < worker {
-		i++
-		go func() {
-			c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
-			for i := 0; i < countTo; i++ {
-				c.Inc()
-			}
-			wg.Done()
-		}()
+	cases := []struct {
+		name    string
+		worker  int
+		countTo int
+	}{
+		{name: "5 workers / 100 pas", worker: 5, countTo: 100},
+		{name: "1 worker / 1000 pas", worker: 1, countTo: 1000},
+		{name: "50 workers / 20 pas", worker: 50, countTo: 20},
 	}
 
-	// Waits for the end of all workers go routine
-	wg.Wait()
-	close(progress)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	if !readerTestSuccess {
-		t.Errorf("Reader tests not performed")
+			progress := make(chan JobProgress)
+			wg := sync.WaitGroup{}
+
+			var readerErr error
+			tracker := sync.WaitGroup{}
+			tracker.Go(func() {
+				result := JobTracker{}
+				for p := range progress {
+					result.RegisterProgression(p.JobId(), p.Progression())
+				}
+				readerErr = checkResult(result, tc.worker, tc.countTo)
+			})
+
+			for i := 1; i <= tc.worker; i++ {
+				wg.Go(func() {
+					c := NewProgressCounter(fmt.Sprintf(JOBID_FORMAT, i), progress)
+					for j := 0; j < tc.countTo; j++ {
+						c.Inc()
+					}
+				})
+			}
+
+			wg.Wait()
+			close(progress)
+			tracker.Wait()
+
+			require.NoError(t, readerErr)
+		})
 	}
+}
+
+func checkResult(result JobTracker, worker int, countTo int) error {
+	for value := 1; value <= countTo; value++ {
+		finishedJobs := result[value]
+		if finishedCount := len(finishedJobs); finishedCount != worker {
+			return fmt.Errorf("Invalid count for progression value %d step (expected %d - got %d)", value, worker, finishedCount)
+		}
+	}
+	return nil
 }
